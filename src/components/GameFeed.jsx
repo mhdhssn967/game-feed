@@ -1,50 +1,112 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import GameCard from './GameCard';
 import { commonGames } from '../data/games';
+import { subscribeToFeedGames } from '../firebase';
 import './GameFeed.css';
 
 // GameFeed only owns the game slots — no overlapping UI inside
 const GameFeed = React.forwardRef(function GameFeed(_props, ref) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [prevIndex, setPrevIndex] = useState(null);
+  const [games, setGames] = useState(commonGames);
+
+  // History stack of indices in activeGames array for back-navigation support
+  const [history, setHistory] = useState([0]);
+  const [historyPointer, setHistoryPointer] = useState(0);
+
+  const [prevGameIndex, setPrevGameIndex] = useState(null);
   const [direction, setDirection] = useState('down');
   const [animating, setAnimating] = useState(false);
   const timerRef = useRef(null);
 
-  const navigate = useCallback((nextIndex, dir) => {
+  // Subscribe to Firestore /games collection for real-time game updates
+  useEffect(() => {
+    const unsubscribe = subscribeToFeedGames((fetchedGames) => {
+      if (fetchedGames && fetchedGames.length > 0) {
+        setGames(fetchedGames);
+      }
+    });
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, []);
+
+  const activeGames = games.length > 0 ? games : commonGames;
+
+  // Get current game index from history pointer safely
+  const currentHistoryVal = history[historyPointer] ?? 0;
+  const currentGameIndex = currentHistoryVal < activeGames.length ? currentHistoryVal : 0;
+
+  // Function to pick a random next game index (different from current if possible)
+  const getRandomNextIndex = useCallback((currIndex, total) => {
+    if (total <= 1) return 0;
+    let nextIdx;
+    do {
+      nextIdx = Math.floor(Math.random() * total);
+    } while (nextIdx === currIndex);
+    return nextIdx;
+  }, []);
+
+  const goDown = useCallback(() => {
     if (animating) return;
-    setDirection(dir);
-    setPrevIndex(currentIndex);
-    setCurrentIndex(nextIndex);
+
+    setDirection('down');
+    setPrevGameIndex(currentGameIndex);
+
+    if (historyPointer < history.length - 1) {
+      // Moving forward in existing history
+      setHistoryPointer((p) => p + 1);
+    } else {
+      // Generate a new random game and push to history
+      const nextGameIdx = getRandomNextIndex(currentGameIndex, activeGames.length);
+      setHistory((prevHist) => [...prevHist, nextGameIdx]);
+      setHistoryPointer((p) => p + 1);
+    }
+
     setAnimating(true);
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
-      setPrevIndex(null);
+      setPrevGameIndex(null);
       setAnimating(false);
     }, 420);
-  }, [animating, currentIndex]);
+  }, [animating, currentGameIndex, historyPointer, history.length, activeGames.length, getRandomNextIndex]);
 
-  // Expose nav controls to parent (App) so UI can live outside this stacking context
+  const goUp = useCallback(() => {
+    if (animating || historyPointer <= 0) return;
+
+    setDirection('up');
+    setPrevGameIndex(currentGameIndex);
+    setHistoryPointer((p) => p - 1);
+
+    setAnimating(true);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setPrevGameIndex(null);
+      setAnimating(false);
+    }, 420);
+  }, [animating, historyPointer, currentGameIndex]);
+
+  // Expose nav controls to parent (App)
   React.useImperativeHandle(ref, () => ({
-    goUp:       () => navigate(Math.max(0, currentIndex - 1), 'up'),
-    goDown:     () => navigate(Math.min(commonGames.length - 1, currentIndex + 1), 'down'),
-    disableUp:  currentIndex === 0,
-    disableDown: currentIndex === commonGames.length - 1,
-  }), [navigate, currentIndex]);
+    goUp,
+    goDown,
+    disableUp: historyPointer === 0,
+    disableDown: false, // Infinite random loop — never stops!
+  }), [goUp, goDown, historyPointer]);
 
   const outClass = direction === 'down' ? 'slide-out-up'    : 'slide-out-down';
   const inClass  = direction === 'down' ? 'slide-in-bottom' : 'slide-in-top';
 
   return (
     <div className="game-feed">
-      {animating && prevIndex !== null && (
-        <div className={`feed-slot ${outClass}`} key={`out-${prevIndex}`}>
-          <GameCard url={commonGames[prevIndex].url} shouldLoad={false} />
+      {animating && prevGameIndex !== null && activeGames[prevGameIndex] && (
+        <div className={`feed-slot ${outClass}`} key={`out-${prevGameIndex}`}>
+          <GameCard url={activeGames[prevGameIndex].url} shouldLoad={false} />
         </div>
       )}
-      <div className={`feed-slot ${animating ? inClass : ''}`} key={`in-${currentIndex}`}>
-        <GameCard url={commonGames[currentIndex].url} shouldLoad={true} />
-      </div>
+      {activeGames[currentGameIndex] && (
+        <div className={`feed-slot ${animating ? inClass : ''}`} key={`in-h${historyPointer}-g${currentGameIndex}`}>
+          <GameCard url={activeGames[currentGameIndex].url} shouldLoad={true} />
+        </div>
+      )}
     </div>
   );
 });
