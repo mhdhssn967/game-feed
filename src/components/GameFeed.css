@@ -1,0 +1,45 @@
+.game-feed {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  /* NO z-index — keeps this out of a new stacking context so nothing
+     inside it can block touch routing to the iframe */
+}
+
+.feed-slot {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Slide animations ── */
+.slide-out-up {
+  animation: slideOutUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.slide-in-bottom {
+  animation: slideInBottom 0.42s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.slide-out-down {
+  animation: slideOutDown 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.slide-in-top {
+  animation: slideInTop 0.42s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes slideOutUp {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-100%); }
+}
+@keyframes slideInBottom {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes slideOutDown {
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+}
+@keyframes slideInTop {
+  from { transform: translateY(-100%); }
+  to   { transform: translateY(0); }
+}

@@ -1,0 +1,214 @@
+@import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+/* ── Shell ── */
+.brand-zone {
+  position: fixed;
+  inset: 0;
+  background: #f5f0eb;
+  color: #1a1140;
+  font-family: 'Outfit', sans-serif;
+  overflow-y: auto;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+}
+.brand-zone::-webkit-scrollbar { display: none; }
+
+/* ── Header ── */
+.bz-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  background: #f5f0eb;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.bz-back-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.06);
+  border: none;
+  color: #1a1140;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.bz-back-btn:hover { background: rgba(0,0,0,0.1); }
+
+.bz-gf-logo {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+}
+
+.bz-coin-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2.5px solid #f5c842;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(245,200,66,0.3);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.bz-coin-icon { font-size: 20px; line-height: 1; }
+
+/* ── Hero Banner ── */
+.bz-banner {
+  margin: 0 16px 20px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #e8e0ff 0%, #d4c8ff 100%);
+  padding: 22px 20px 20px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 130px;
+}
+
+/* decorative background blob */
+.bz-banner::before {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  right: -20px;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  pointer-events: none;
+}
+
+.bz-trophy {
+  font-size: 72px;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+  margin-left: -6px;
+}
+
+.bz-banner-text { flex: 1; }
+
+.bz-banner-headline {
+  font-family: 'Luckiest Guy', cursive;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  color: #1a1140;
+  line-height: 1.15;
+  margin-bottom: 8px;
+}
+
+.bz-win { color: #4f6ef7; }
+
+.bz-banner-desc {
+  font-size: 12px;
+  color: #5b4f8a;
+  line-height: 1.5;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* decorative stars on banner */
+.bz-star {
+  position: absolute;
+  font-size: 16px;
+  opacity: 0.7;
+  pointer-events: none;
+  animation: bz-spin 6s linear infinite;
+}
+.bz-star--tl { top: 12px; left: 10px; animation-direction: normal; }
+.bz-star--tr { top: 10px; right: 16px; font-size: 12px; animation-direction: reverse; }
+.bz-star--bl { bottom: 10px; left: 50%; font-size: 10px; }
+
+@keyframes bz-spin {
+  0%   { transform: rotate(0deg) scale(1); }
+  50%  { transform: rotate(180deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+/* ── Brand Grid ── */
+.bz-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  padding: 0 16px 32px;
+}
+
+/* ── Brand Card ── */
+.brand-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 14px 20px;
+  border-radius: 24px;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+  color: #1a1140;
+  font-family: inherit;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+
+.brand-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+}
+
+.brand-card:active {
+  transform: scale(0.96);
+}
+
+/* per-card sparkle decorations */
+.card-star {
+  position: absolute;
+  font-size: 14px;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.card-star--tl { top: 10px; left: 10px; }
+.card-star--tr { top: 8px; right: 10px; font-size: 10px; }
+
+/* Brand icon box */
+.brand-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+}
+
+.brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Brand name */
+.brand-name {
+  font-family: 'Luckiest Guy', cursive;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  color: #1a1140;
+  text-align: center;
+  line-height: 1.2;
+}
