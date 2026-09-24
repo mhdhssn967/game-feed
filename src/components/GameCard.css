@@ -4,6 +4,7 @@
   flex-direction: column;
   background: #000;
   min-height: 0;
+  position: relative;
 }
 
 .game-iframe {
@@ -17,4 +18,128 @@
 .game-placeholder {
   flex: 1;
   background: linear-gradient(135deg, #0d0d0d 0%, #1c1c1c 100%);
+}
+
+/* ── Top Bar (User Info) ── */
+.game-top-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%);
+  z-index: 10;
+  transition: opacity 0.3s ease;
+}
+
+.dev-info-compact {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dev-profile-pic-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
+  object-fit: cover;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+
+.dev-name-small {
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+
+.follow-btn-small {
+  pointer-events: auto;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.follow-btn-small:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ── HUD Visibility ── */
+.visible {
+  opacity: 1;
+}
+
+.hidden {
+  opacity: 0;
+  pointer-events: none !important;
+}
+
+/* ── Overlay UI Styles ── */
+.game-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24px 16px 32px;
+  display: flex;
+  justify-content: flex-end; /* aligned right */
+  align-items: flex-end;
+  pointer-events: none; /* Let touches pass through */
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+  z-index: 10;
+  transition: opacity 0.3s ease;
+}
+
+.action-buttons-col {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.action-btn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  padding: 0;
+}
+
+.action-btn:hover {
+  transform: scale(1.1);
+}
+
+.action-icon {
+  font-size: 28px;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+}
+
+.action-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
 }

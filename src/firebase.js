@@ -44,6 +44,7 @@ export function subscribeToFeedGames(onGamesLoaded) {
             url: data.link,
             title: data.title || "Untitled Game",
             addedByName: data.addedByName || "",
+            addedByUserId: data.addedByUserId || null,
             thumbnail: data.thumbnail || null,
             createdAt: data.createdAt ? data.createdAt : null,
           });

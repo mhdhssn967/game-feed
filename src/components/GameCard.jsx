@@ -1,7 +1,79 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Heart, MessageCircle, Bookmark, Share2 } from 'lucide-react';
 import './GameCard.css';
 
-function GameCard({ url, shouldLoad }) {
+function GameCard({ game, url: fallbackUrl, shouldLoad, onProfileClick }) {
+  const url = game?.link || game?.url || fallbackUrl;
+  const developerName = game?.addedByName || game?.developer || 'Unknown User';
+  const developerLogo = game?.thumbnail || game?.developerLogo || '/gflogo.png';
+  const likes = game?.likes || Math.floor(Math.random() * 50) + 10 + 'k';
+  const comments = game?.comments || Math.floor(Math.random() * 900) + 100;
+
+  const [showHud, setShowHud] = useState(true);
+  const idleTimerRef = useRef(null);
+  const initialHideTimerRef = useRef(null);
+
+  const resetIdleTimer = () => {
+    clearTimeout(idleTimerRef.current);
+    idleTimerRef.current = setTimeout(() => {
+      setShowHud(true);
+    }, 3000);
+  };
+
+  useEffect(() => {
+    if (!shouldLoad) return;
+    
+    // Initial logic: show for 2s, then hide
+    setShowHud(true);
+    initialHideTimerRef.current = setTimeout(() => {
+      setShowHud(false);
+      resetIdleTimer();
+    }, 2000);
+
+    const handleInteraction = (e) => {
+      // Don't hide if interacting with the HUD itself
+      if (e?.target?.closest && (e.target.closest('.game-top-bar') || e.target.closest('.game-overlay'))) {
+        resetIdleTimer();
+        return;
+      }
+      
+      // Hide on touch
+      setShowHud(false);
+      resetIdleTimer();
+    };
+    
+    window.addEventListener('touchstart', handleInteraction, { capture: true });
+    window.addEventListener('mousedown', handleInteraction, { capture: true });
+    window.addEventListener('keydown', handleInteraction, { capture: true });
+    
+    const handleBlur = () => {
+      if (document.activeElement?.tagName === 'IFRAME') {
+        handleInteraction({});
+      }
+    };
+    window.addEventListener('blur', handleBlur);
+
+    return () => {
+      clearTimeout(initialHideTimerRef.current);
+      clearTimeout(idleTimerRef.current);
+      window.removeEventListener('touchstart', handleInteraction, { capture: true });
+      window.removeEventListener('mousedown', handleInteraction, { capture: true });
+      window.removeEventListener('keydown', handleInteraction, { capture: true });
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, [shouldLoad]);
+
+  const handleDevClick = (e) => {
+    e.stopPropagation();
+    if (onProfileClick) {
+      onProfileClick({
+        id: game?.addedByUserId || game?.id || 'unknown',
+        name: developerName,
+        logo: developerLogo
+      });
+    }
+  };
+
   return (
     <div className="game-card">
       {shouldLoad ? (
@@ -15,6 +87,37 @@ function GameCard({ url, shouldLoad }) {
       ) : (
         <div className="game-placeholder" />
       )}
+
+      {/* ── Top Bar (User Info) ── */}
+      <div className={`game-top-bar ${showHud ? 'visible' : 'hidden'}`}>
+        <div className="dev-info-compact" onClick={handleDevClick} style={{ cursor: 'pointer' }}>
+          <img src={developerLogo} alt={developerName} className="dev-profile-pic-small" />
+          <span className="dev-name-small">{developerName}</span>
+        </div>
+        <button className="follow-btn-small">Follow</button>
+      </div>
+
+      {/* ── Overlay UI (Engagement Actions) ── */}
+      <div className={`game-overlay ${showHud ? 'visible' : 'hidden'}`}>
+        <div className="action-buttons-col">
+          <button className="action-btn">
+            <Heart className="action-icon" size={28} color="#fff" />
+            <span className="action-text">{likes}</span>
+          </button>
+          <button className="action-btn">
+            <MessageCircle className="action-icon" size={28} color="#fff" />
+            <span className="action-text">{comments}</span>
+          </button>
+          <button className="action-btn">
+            <Bookmark className="action-icon" size={28} color="#fff" />
+            <span className="action-text">Save</span>
+          </button>
+          <button className="action-btn">
+            <Share2 className="action-icon" size={28} color="#fff" />
+            <span className="action-text">Share</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

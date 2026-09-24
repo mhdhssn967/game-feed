@@ -5,7 +5,7 @@ import { subscribeToFeedGames } from '../firebase';
 import './GameFeed.css';
 
 // GameFeed only owns the game slots — no overlapping UI inside
-const GameFeed = React.forwardRef(function GameFeed(_props, ref) {
+const GameFeed = React.forwardRef(function GameFeed({ onProfileClick }, ref) {
   const [games, setGames] = useState(commonGames);
 
   // History stack of indices in activeGames array for back-navigation support
@@ -99,12 +99,12 @@ const GameFeed = React.forwardRef(function GameFeed(_props, ref) {
     <div className="game-feed">
       {animating && prevGameIndex !== null && activeGames[prevGameIndex] && (
         <div className={`feed-slot ${outClass}`} key={`out-${prevGameIndex}`}>
-          <GameCard url={activeGames[prevGameIndex].url} shouldLoad={false} />
+          <GameCard game={activeGames[prevGameIndex]} shouldLoad={false} onProfileClick={onProfileClick} />
         </div>
       )}
       {activeGames[currentGameIndex] && (
         <div className={`feed-slot ${animating ? inClass : ''}`} key={`in-h${historyPointer}-g${currentGameIndex}`}>
-          <GameCard url={activeGames[currentGameIndex].url} shouldLoad={true} />
+          <GameCard game={activeGames[currentGameIndex]} shouldLoad={true} onProfileClick={onProfileClick} />
         </div>
       )}
     </div>
