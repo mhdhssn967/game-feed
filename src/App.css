@@ -10,7 +10,7 @@
 /* ── Top Navbar ── */
 .top-navbar {
   position: fixed;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
   left: 0;
   right: 0;
   height: 64px;
@@ -25,6 +25,17 @@
   box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15);
   z-index: 100;
   pointer-events: auto;
+}
+
+.top-navbar::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top, 0px);
+  background: #05030a;
+  z-index: 100;
 }
 
 .navbar-left, .navbar-right {
