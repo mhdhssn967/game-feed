@@ -1,192 +1,304 @@
 .user-profile-page {
   position: fixed;
   inset: 0;
-  background: #0f0f13;
+  background: #05030a;
   z-index: 200;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   color: #fff;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  padding-top: max(25px, env(safe-area-inset-top, 0px));
 }
 
-.up-header {
-  display: flex;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  position: sticky;
-  top: 0;
-  background: rgba(15, 15, 19, 0.95);
-  backdrop-filter: blur(10px);
-  z-index: 10;
+.user-profile-page::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Cover Area ── */
+.up-cover {
+  position: relative;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+.up-cover-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #a78bfa 0%, #4c1d95 100%);
+  border-bottom-left-radius: 32px;
+  border-bottom-right-radius: 32px;
+  overflow: hidden;
+}
+
+.up-cover-gradient::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;utf8,<svg opacity="0.3" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="%23fff" d="M10 10h10v10H10zM30 30h10v10H30zM50 50h10v10H50zM70 70h10v10H70z" /></svg>') repeat;
+  background-size: 20px 20px;
+  mix-blend-mode: overlay;
 }
 
 .up-back-btn {
-  background: transparent;
-  border: none;
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.1);
   color: #fff;
-  padding: 8px;
-  margin-left: -8px;
-  cursor: pointer;
   display: flex;
-}
-
-.up-username {
-  font-size: 16px;
-  font-weight: 700;
-  margin-left: 16px;
-  letter-spacing: 0.5px;
-}
-
-.up-info {
-  display: flex;
-  padding: 20px 16px;
   align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.2s;
 }
 
-.up-avatar-container {
-  flex-shrink: 0;
-  margin-right: 28px;
+.up-back-btn:active {
+  background: rgba(0,0,0,0.5);
+  transform: scale(0.95);
+}
+
+/* ── Content Area ── */
+.up-content {
+  flex: 1;
+  padding: 0 20px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: -50px;
+  z-index: 5;
+}
+
+/* ── Profile Header ── */
+.up-profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.up-avatar-wrapper {
+  width: 100px;
+  height: 100px;
+  border-radius: 30px;
+  background: #05030a;
+  padding: 4px;
+  margin-bottom: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  position: relative;
 }
 
 .up-avatar {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
+  width: 100%;
+  height: 100%;
+  border-radius: 26px;
   object-fit: cover;
-  border: 2px solid rgba(139, 92, 246, 0.8);
-  padding: 2px;
+  background: #1c1c24;
 }
 
-.up-stats {
+.up-username {
+  font-family: 'Luckiest Guy', cursive;
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  margin: 0 0 6px;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+}
+
+.up-bio-text {
+  font-size: 14px;
+  color: rgba(255,255,255,0.7);
+  text-align: center;
+  margin: 0;
+  max-width: 280px;
+  line-height: 1.4;
+}
+
+/* ── Stats Glass Pill ── */
+.up-stats-glass {
   display: flex;
-  flex: 1;
-  justify-content: space-between;
-  padding-right: 16px;
+  align-items: center;
+  justify-content: space-around;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 20px;
+  padding: 16px 20px;
+  width: 100%;
+  max-width: 340px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .up-stat {
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex: 1;
 }
 
 .up-stat-val {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
+  color: #fff;
+  margin-bottom: 2px;
 }
 
 .up-stat-lbl {
-  font-size: 13px;
-  color: rgba(255,255,255,0.7);
-  margin-top: 2px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
-.up-bio {
-  padding: 0 16px 16px;
+.up-stat-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255,255,255,0.1);
 }
 
-.up-bio-name {
-  font-weight: 700;
-  font-size: 14px;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.up-bio-text {
-  font-size: 14px;
-  line-height: 1.4;
-  color: rgba(255,255,255,0.9);
-  margin: 0;
-}
-
+/* ── Actions ── */
 .up-actions {
   display: flex;
-  padding: 0 16px 16px;
-  gap: 8px;
+  gap: 12px;
+  width: 100%;
+  max-width: 340px;
+  margin-bottom: 32px;
 }
 
-.up-action-btn {
+.up-btn-primary {
   flex: 1;
-  padding: 8px 0;
-  border-radius: 8px;
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
+  background: linear-gradient(90deg, #8b5cf6 0%, #6d28d9 100%);
+  color: #fff;
   border: none;
+  padding: 14px 24px;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
 }
 
-.up-follow {
-  background: #3b82f6;
+.up-btn-primary:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+}
+
+.up-btn-secondary {
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
   color: #fff;
-}
-
-.up-message {
-  background: rgba(255,255,255,0.15);
-  color: #fff;
-}
-
-.up-tabs {
+  border-radius: 16px;
   display: flex;
-  border-top: 1px solid rgba(255,255,255,0.1);
-}
-
-.up-tab {
-  flex: 1;
-  display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 12px 0;
-  border-bottom: 2px solid transparent;
-  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: background 0.15s;
 }
 
-.up-tab.active {
+.up-btn-secondary:active {
+  background: rgba(255,255,255,0.15);
+  transform: scale(0.96);
+}
+
+/* ── Games Library ── */
+.up-library {
+  width: 100%;
+}
+
+.up-library-title {
+  font-family: 'Luckiest Guy', cursive;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  margin: 0 0 16px;
   color: #fff;
-  border-bottom: 2px solid #fff;
 }
 
-.up-grid {
+.up-cards-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
 }
 
-.up-grid-item {
-  aspect-ratio: 1;
-  background: #1c1c24;
+.up-game-card {
   position: relative;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 20px;
+  overflow: hidden;
+  aspect-ratio: 0.85;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   cursor: pointer;
 }
 
-.up-grid-img {
+.up-game-card:active {
+  transform: scale(0.98);
+}
+
+.up-game-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.up-grid-placeholder {
+.up-game-placeholder {
   width: 100%;
   height: 100%;
+  background: linear-gradient(135deg, rgba(167,139,250,0.1) 0%, rgba(76,29,149,0.2) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
-  text-align: center;
-  background: linear-gradient(135deg, #a78bfa 0%, #4c1d95 100%);
 }
 
-.up-grid-title {
-  font-size: 12px;
+.up-placeholder-icon {
+  font-size: 32px;
+  opacity: 0.5;
+}
+
+.up-game-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24px 12px 12px;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+  display: flex;
+  align-items: flex-end;
+}
+
+.up-game-title {
+  font-size: 13px;
   font-weight: 700;
+  color: #fff;
   line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
 .up-no-games {
   grid-column: 1 / -1;
   text-align: center;
   padding: 40px 16px;
-  color: rgba(255,255,255,0.5);
+  color: rgba(255,255,255,0.4);
   font-size: 14px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 20px;
+  border: 1px dashed rgba(255,255,255,0.1);
 }

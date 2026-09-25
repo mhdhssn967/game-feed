@@ -10,7 +10,7 @@
 /* ── Top Navbar ── */
 .top-navbar {
   position: fixed;
-  top: env(safe-area-inset-top, 0px);
+  top: max(25px, env(safe-area-inset-top, 0px));
   left: 0;
   right: 0;
   height: 64px;
@@ -33,7 +33,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: env(safe-area-inset-top, 0px);
+  height: max(25px, env(safe-area-inset-top, 0px));
   background: #05030a;
   z-index: 100;
 }
