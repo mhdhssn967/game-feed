@@ -1,7 +1,7 @@
 .nav-arrows {
   position: fixed;
   left: 16px;
-  bottom: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom, 16px));
   display: flex;
   flex-direction: column;
   gap: 10px;

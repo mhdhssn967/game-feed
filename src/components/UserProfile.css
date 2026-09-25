@@ -25,7 +25,7 @@
 .up-cover-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #a78bfa 0%, #4c1d95 100%);
+  background: url('/image.png') center/cover no-repeat;
   border-bottom-left-radius: 32px;
   border-bottom-right-radius: 32px;
   overflow: hidden;
@@ -35,9 +35,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: url('data:image/svg+xml;utf8,<svg opacity="0.3" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="%23fff" d="M10 10h10v10H10zM30 30h10v10H30zM50 50h10v10H50zM70 70h10v10H70z" /></svg>') repeat;
-  background-size: 20px 20px;
-  mix-blend-mode: overlay;
+  background: linear-gradient(to bottom, transparent, rgba(5, 3, 10, 0.8));
 }
 
 .up-back-btn {

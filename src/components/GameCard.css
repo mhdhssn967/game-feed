@@ -96,7 +96,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 24px 16px 32px;
+  padding: 24px 16px calc(32px + env(safe-area-inset-bottom, 16px));
   display: flex;
   justify-content: flex-end; /* aligned right */
   align-items: flex-end;

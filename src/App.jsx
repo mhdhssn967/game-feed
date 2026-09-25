@@ -51,6 +51,7 @@ function App() {
           This prevents the animated brand-zone-btn from blocking touch in the iframe. */}
       {page === 'feed' && (
         <>
+          <div className="safe-area-panel"></div>
           {/* Top Navbar */}
           <div className="top-navbar">
             <div className="navbar-left">

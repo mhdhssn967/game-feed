@@ -27,8 +27,7 @@
   pointer-events: auto;
 }
 
-.top-navbar::before {
-  content: '';
+.safe-area-panel {
   position: fixed;
   top: 0;
   left: 0;
