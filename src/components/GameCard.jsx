@@ -1,17 +1,38 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Bookmark, Share2 } from 'lucide-react';
+import { db, auth } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import './GameCard.css';
 
 function GameCard({ game, url: fallbackUrl, shouldLoad, onProfileClick }) {
   const url = game?.link || game?.url || fallbackUrl;
   const developerName = game?.addedByName || game?.developer || 'Unknown User';
-  const developerLogo = game?.thumbnail || game?.developerLogo || '/gflogo.png';
   const likes = game?.likes || Math.floor(Math.random() * 50) + 10 + 'k';
   const comments = game?.comments || Math.floor(Math.random() * 900) + 100;
 
+  const [developerLogo, setDeveloperLogo] = useState(null);
   const [showHud, setShowHud] = useState(true);
   const idleTimerRef = useRef(null);
   const initialHideTimerRef = useRef(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    // Fast fallback: if this game belongs to the currently logged in user, use their auth picture!
+    if (auth.currentUser && game?.addedByUserId === auth.currentUser.uid && auth.currentUser.photoURL) {
+      setDeveloperLogo(auth.currentUser.photoURL);
+    }
+
+    if (game?.addedByUserId) {
+      getDoc(doc(db, 'users', game.addedByUserId)).then(snap => {
+        if (isMounted && snap.exists() && snap.data().logo) {
+          setDeveloperLogo(snap.data().logo);
+        }
+      });
+    }
+
+    return () => { isMounted = false; };
+  }, [game]);
 
   const resetIdleTimer = () => {
     clearTimeout(idleTimerRef.current);
@@ -91,7 +112,16 @@ function GameCard({ game, url: fallbackUrl, shouldLoad, onProfileClick }) {
       {/* ── Top Bar (User Info) ── */}
       <div className={`game-top-bar ${showHud ? 'visible' : 'hidden'}`}>
         <div className="dev-info-compact" onClick={handleDevClick} style={{ cursor: 'pointer' }}>
-          <img src={developerLogo} alt={developerName} className="dev-profile-pic-small" />
+          <div className="dev-profile-pic-small" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2a224a', color: '#a78bfa' }}>
+            {developerLogo ? (
+              <img src={developerLogo} alt={developerName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            )}
+          </div>
           <span className="dev-name-small">{developerName}</span>
         </div>
         <button className="follow-btn-small">Follow</button>

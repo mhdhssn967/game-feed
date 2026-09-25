@@ -3,13 +3,24 @@ import GameFeed from './components/GameFeed';
 import BrandZone from './components/BrandZone';
 import NavigationArrows from './components/NavigationArrows';
 import UserProfile from './components/UserProfile';
+import Login from './components/Login';
+import { auth } from './firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import './App.css';
 
 function App() {
-  const [page, setPage] = useState('feed'); // 'feed' | 'brandZone' | 'profile'
+  const [page, setPage] = useState('feed'); // 'feed' | 'brandZone' | 'profile' | 'login'
   const [navState, setNavState] = useState({ disableUp: true, disableDown: false });
   const [selectedUser, setSelectedUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const feedRef = useRef(null);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return unsub;
+  }, []);
 
   // Sync nav disabled state whenever feed ref updates
   const syncNav = () => {
@@ -63,10 +74,42 @@ function App() {
             <div className="navbar-center">
             </div>
             
-            <div className="navbar-right">
+            <div className="navbar-right" style={{ gap: '12px' }}>
               <button className="nav-btn bz-special-btn" onClick={() => setPage('brandZone')}>
-                <span className="bz-text">BRAND ZONE</span>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'relative', zIndex: 2 }}>
+                  <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                  <rect x="2" y="7" width="20" height="5"></rect>
+                  <line x1="12" y1="22" x2="12" y2="7"></line>
+                  <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                  <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+                </svg>
                 <div className="bz-glow"></div>
+              </button>
+              <button 
+                className="nav-btn profile-icon-btn" 
+                onClick={() => {
+                  if (currentUser) {
+                    setSelectedUser({
+                      id: currentUser.uid,
+                      name: currentUser.displayName || 'Anonymous Player',
+                      logo: currentUser.photoURL || null
+                    });
+                    setPage('profile');
+                  } else {
+                    setPage('login');
+                  }
+                }}
+              >
+                {currentUser?.photoURL ? (
+                  <img src={currentUser.photoURL} alt="Profile" className="nav-profile-pic" />
+                ) : (
+                  <div className="nav-profile-placeholder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                )}
               </button>
             </div>
           </div>
@@ -88,7 +131,23 @@ function App() {
 
       {/* User Profile overlays everything */}
       {page === 'profile' && selectedUser && (
-        <UserProfile user={selectedUser} onClose={() => setPage('feed')} />
+        <UserProfile 
+          user={selectedUser} 
+          isCurrentUser={currentUser && currentUser.uid === selectedUser.id}
+          onClose={() => setPage('feed')} 
+        />
+      )}
+
+      {/* Login Screen overlays everything */}
+      {page === 'login' && (
+        <Login onLogin={() => {
+          setPage('profile');
+          setSelectedUser({
+            id: auth.currentUser.uid,
+            name: auth.currentUser.displayName || 'Anonymous Player',
+            logo: auth.currentUser.photoURL || null
+          });
+        }} onClose={() => setPage('feed')} />
       )}
     </div>
   );
