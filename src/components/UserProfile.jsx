@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { subscribeToFeedGames, auth, storage, db } from '../firebase';
 import { updateProfile } from 'firebase/auth';
-import { ref, listAll, getDownloadURL, uploadBytes } from 'firebase/storage';
-import { doc, updateDoc, onSnapshot, setDoc, getDoc, arrayUnion, arrayRemove, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, onSnapshot, setDoc, getDoc, arrayUnion, arrayRemove, addDoc, collection, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import Swal from 'sweetalert2';
 import './UserProfile.css';
 
-function UserProfile({ user, isCurrentUser, onClose }) {
+function UserProfile({ user, isCurrentUser, isDeveloper, onOpenDevDashboard, onBecomeDeveloper, onClose, onPlayGameInFeed }) {
   const [games, setGames] = useState([]);
   const [isSelectingAvatar, setIsSelectingAvatar] = useState(false);
   const [avatars, setAvatars] = useState([]);
@@ -13,17 +13,24 @@ function UserProfile({ user, isCurrentUser, onClose }) {
   const [bio, setBio] = useState("Game dev crafting fun web experiences! 🎮");
   const [isEditingBio, setIsEditingBio] = useState(false);
 
+  const [allGames, setAllGames] = useState([]);
+  const [savedGameIds, setSavedGameIds] = useState([]);
+
   useEffect(() => {
     const unsubscribe = subscribeToFeedGames((fetchedGames) => {
       if (fetchedGames) {
-        const userGames = fetchedGames.filter(g => g.addedByUserId === user.id || g.addedByName === user.name);
-        setGames(userGames);
+        setAllGames(fetchedGames);
       }
     });
     return () => {
       if (typeof unsubscribe === 'function') unsubscribe();
     };
-  }, [user]);
+  }, []);
+
+  useEffect(() => {
+    const saved = allGames.filter(g => savedGameIds.includes(g.id));
+    setGames(saved);
+  }, [allGames, savedGameIds]);
 
   const loadAvatars = () => {
     const bucket = 'gamefaktory-1b0b8.firebasestorage.app';
@@ -92,6 +99,9 @@ function UserProfile({ user, isCurrentUser, onClose }) {
         } else {
           setIsFollowing(false);
         }
+        if (data.savedGames) {
+          setSavedGameIds(data.savedGames);
+        }
       } else {
         setStats({ followers: 0, following: 0 });
       }
@@ -142,109 +152,29 @@ function UserProfile({ user, isCurrentUser, onClose }) {
     }
   };
 
-  const [editingGame, setEditingGame] = useState(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [editThumbnailFile, setEditThumbnailFile] = useState(null);
-  const [editThumbnailPreview, setEditThumbnailPreview] = useState(null);
-
   const handleGameCardClick = (game) => {
-    if (isCurrentUser) {
-      setEditingGame(game);
-      setEditTitle(game.title);
-      setEditThumbnailPreview(game.thumbnail);
-      setEditThumbnailFile(null);
+    if (onPlayGameInFeed && game.id) {
+      onPlayGameInFeed(game.id);
+    } else if (game.link) {
+      window.open(game.link, '_blank');
     }
   };
 
-  const [isAddingGame, setIsAddingGame] = useState(false);
-  const [newGameTitle, setNewGameTitle] = useState('');
-  const [newGameUrl, setNewGameUrl] = useState('');
-  const [newGameThumbnailFile, setNewGameThumbnailFile] = useState(null);
-  const [newGameThumbnailPreview, setNewGameThumbnailPreview] = useState(null);
-
-  const processImageForWebp = (file, setFile, setPreview) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const MAX_WIDTH = 800;
-      let width = img.width;
-      let height = img.height;
-      if (width > MAX_WIDTH) {
-        height *= MAX_WIDTH / width;
-        width = MAX_WIDTH;
-      }
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
-      canvas.toBlob((blob) => {
-        setFile(blob);
-        setPreview(URL.createObjectURL(blob));
-      }, 'image/webp', 0.8);
-    };
-    img.src = URL.createObjectURL(file);
-  };
-
-  const handleThumbnailChange = (e) => {
-    const file = e.target.files[0];
-    if (file) processImageForWebp(file, setEditThumbnailFile, setEditThumbnailPreview);
-  };
-
-  const handleNewThumbnailChange = (e) => {
-    const file = e.target.files[0];
-    if (file) processImageForWebp(file, setNewGameThumbnailFile, setNewGameThumbnailPreview);
-  };
-
-  const saveGameEdit = async () => {
-    if (!editingGame) return;
-    try {
-      let finalThumbnailUrl = editingGame.thumbnail;
-      if (editThumbnailFile) {
-        const thumbRef = ref(storage, `game_thumbnails/${editingGame.id}_${Date.now()}.webp`);
-        await uploadBytes(thumbRef, editThumbnailFile);
-        finalThumbnailUrl = await getDownloadURL(thumbRef);
-      }
-      const gameDocRef = doc(db, 'games', editingGame.id);
-      await updateDoc(gameDocRef, {
-        title: editTitle,
-        thumbnail: finalThumbnailUrl
-      });
-      setEditingGame(null);
-    } catch (err) {
-      console.error('Error saving game:', err);
-      alert('Failed to save game changes.');
-    }
-  };
-
-  const saveNewGame = async () => {
-    if (!newGameTitle || !newGameUrl) {
-      alert("Please provide both a title and a URL for the game.");
-      return;
-    }
-    try {
-      let finalThumbnailUrl = null;
-      if (newGameThumbnailFile) {
-        const thumbRef = ref(storage, `game_thumbnails/new_${Date.now()}.webp`);
-        await uploadBytes(thumbRef, newGameThumbnailFile);
-        finalThumbnailUrl = await getDownloadURL(thumbRef);
-      }
-      const gamesRef = collection(db, 'games');
-      await addDoc(gamesRef, {
-        title: newGameTitle,
-        link: newGameUrl,
-        thumbnail: finalThumbnailUrl,
-        addedByUserId: auth.currentUser.uid,
-        addedByName: auth.currentUser.displayName || 'Anonymous Player',
-        createdAt: serverTimestamp()
-      });
-      setIsAddingGame(false);
-      setNewGameTitle('');
-      setNewGameUrl('');
-      setNewGameThumbnailFile(null);
-      setNewGameThumbnailPreview(null);
-    } catch (err) {
-      console.error('Error adding game:', err);
-      alert('Failed to add new game.');
+  const handleBecomeDeveloperClick = async () => {
+    if (isDeveloper) return;
+    const result = await Swal.fire({
+      title: 'Become a developer?',
+      text: 'You can start uploading and sharing your games!',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#8b5cf6',
+      cancelButtonColor: '#f44336',
+      confirmButtonText: 'Yes, let\'s go!',
+      background: '#1c1c24',
+      color: '#fff'
+    });
+    if (result.isConfirmed) {
+      onBecomeDeveloper();
     }
   };
 
@@ -338,25 +268,31 @@ function UserProfile({ user, isCurrentUser, onClose }) {
         )}
 
         {isCurrentUser && (
-          <div className="up-actions">
+          <div className="up-actions" style={{ gap: '10px' }}>
             <button className="up-btn-primary" onClick={() => auth.signOut().then(onClose)}>Sign Out</button>
+            {isDeveloper && (
+              <button className="up-btn-primary" style={{ background: '#2a224a' }} onClick={onOpenDevDashboard}>
+                Developer Dashboard
+              </button>
+            )}
+          </div>
+        )}
+
+        {isCurrentUser && !isDeveloper && (
+          <div className="developer-banner-wrapper" onClick={handleBecomeDeveloperClick} style={{ cursor: 'pointer', margin: '20px 16px 24px 16px', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
+            <img src="/publishgamebanner.png" alt="Publish Games" style={{ width: '100%', display: 'block' }} />
           </div>
         )}
 
         <div className="up-library">
           <div className="up-library-header">
-            <h3 className="up-library-title">Library</h3>
-            {isCurrentUser && (
-              <button className="up-add-game-btn" onClick={() => setIsAddingGame(true)}>
-                + Add
-              </button>
-            )}
+            <h3 className="up-library-title">Saved Games</h3>
           </div>
           <div className="up-cards-grid">
             {games.map(g => (
               <div className="up-game-card" key={g.id} onClick={() => handleGameCardClick(g)}>
                 {g.thumbnail ? (
-                  <img src={g.thumbnail} alt={g.title} className="up-game-img" />
+                  <img src={g.thumbnail} alt={g.title} className="up-game-img" loading="lazy" />
                 ) : (
                   <div className="up-game-placeholder">
                     <div className="placeholder-particles">
@@ -386,63 +322,6 @@ function UserProfile({ user, isCurrentUser, onClose }) {
           </div>
         </div>
       </div>
-
-      {isAddingGame && (
-        <div className="up-avatar-modal">
-          <div className="up-avatar-modal-content">
-            <button className="up-avatar-close" onClick={() => setIsAddingGame(false)}>
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-            <h3 className="up-avatar-modal-title">Add New Game</h3>
-            <div className="edit-game-form">
-              <label>Game Title</label>
-              <input type="text" value={newGameTitle} onChange={(e) => setNewGameTitle(e.target.value)} className="edit-game-input" placeholder="Enter game title" />
-              
-              <label>Game URL (Required)</label>
-              <input type="text" value={newGameUrl} onChange={(e) => setNewGameUrl(e.target.value)} className="edit-game-input" placeholder="https://example.com/game" />
-              
-              <label>Thumbnail (Optional)</label>
-              <div className="edit-game-img-preview" onClick={() => document.getElementById('newThumbnailInput').click()}>
-                {newGameThumbnailPreview ? (
-                  <img src={newGameThumbnailPreview} alt="Thumbnail preview" />
-                ) : (
-                  <span>Click to upload image</span>
-                )}
-              </div>
-              <input type="file" id="newThumbnailInput" style={{ display: 'none' }} accept="image/*" onChange={handleNewThumbnailChange} />
-              
-              <button className="up-btn-primary" style={{ width: '100%', marginTop: 20 }} onClick={saveNewGame}>Add Game</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {editingGame && (
-        <div className="up-avatar-modal">
-          <div className="up-avatar-modal-content">
-            <button className="up-avatar-close" onClick={() => setEditingGame(null)}>
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-            <h3 className="up-avatar-modal-title">Edit Game</h3>
-            <div className="edit-game-form">
-              <label>Game Title</label>
-              <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="edit-game-input" />
-              
-              <label>Thumbnail</label>
-              <div className="edit-game-img-preview" onClick={() => document.getElementById('thumbnailInput').click()}>
-                {editThumbnailPreview ? (
-                  <img src={editThumbnailPreview} alt="Thumbnail preview" />
-                ) : (
-                  <span>Click to upload image</span>
-                )}
-              </div>
-              <input type="file" id="thumbnailInput" style={{ display: 'none' }} accept="image/*" onChange={handleThumbnailChange} />
-              
-              <button className="up-btn-primary" style={{ width: '100%', marginTop: 20 }} onClick={saveGameEdit}>Save Changes</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {isSelectingAvatar && (
         <div className="up-avatar-modal">

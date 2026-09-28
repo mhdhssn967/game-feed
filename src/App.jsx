@@ -3,24 +3,103 @@ import GameFeed from './components/GameFeed';
 import BrandZone from './components/BrandZone';
 import NavigationArrows from './components/NavigationArrows';
 import UserProfile from './components/UserProfile';
+import DeveloperDashboard from './components/DeveloperDashboard';
 import Login from './components/Login';
-import { auth } from './firebase';
+import GFCoinModal from './components/GFCoinModal';
+import { auth, db, functions } from './firebase';
+import { httpsCallable } from 'firebase/functions';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import Swal from 'sweetalert2';
 import './App.css';
 
 function App() {
-  const [page, setPage] = useState('feed'); // 'feed' | 'brandZone' | 'profile' | 'login'
+  const [page, setPage] = useState('loading'); // 'loading' | 'feed' | 'brandZone' | 'profile' | 'login'
   const [navState, setNavState] = useState({ disableUp: true, disableDown: false });
   const [selectedUser, setSelectedUser] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [isDeveloper, setIsDeveloper] = useState(false);
+  const [showCoinModal, setShowCoinModal] = useState(false);
   const feedRef = useRef(null);
 
+  const initialGameId = new URLSearchParams(window.location.search).get('game');
+
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
+    let userSub;
+    const unsub = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
+      if (user) {
+        const userRef = doc(db, 'users', user.uid);
+        
+        userSub = onSnapshot(userRef, (docSnap) => {
+          if (docSnap.exists()) {
+            setUserData(docSnap.data());
+            if (docSnap.data().isDeveloper) {
+              setIsDeveloper(true);
+            } else {
+              setIsDeveloper(false);
+            }
+          } else {
+            setUserData(null);
+            setIsDeveloper(false);
+          }
+        });
+        
+        setPage((p) => (p === 'login' || p === 'loading' ? 'feed' : p));
+      } else {
+        if (userSub) userSub();
+        setUserData(null);
+        setIsDeveloper(false);
+        setPage('login');
+      }
     });
-    return unsub;
+    return () => {
+      unsub();
+      if (userSub) userSub();
+    };
   }, []);
+
+  useEffect(() => {
+    if (userData && !userData.onboardingClaimed && !window.onboardingShown) {
+      window.onboardingShown = true;
+      const claimGift = async () => {
+        const result = await Swal.fire({
+          title: 'Welcome to GameFaktory!',
+          text: "Here is your 50 Coins onboarding gift to get you started!",
+          imageUrl: '/gfcoin.webp',
+          imageWidth: 80,
+          imageHeight: 80,
+          confirmButtonText: 'Claim Gift',
+          confirmButtonColor: '#8b5cf6',
+          background: '#1c1c24',
+          color: '#fff',
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
+        
+        if (result.isConfirmed) {
+          try {
+            Swal.fire({ title: 'Claiming...', background: '#1c1c24', color: '#fff', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            const processReferral = httpsCallable(functions, 'processReferralCode');
+            const response = await processReferral({});
+            Swal.fire({
+              title: 'Gift Claimed!',
+              text: response.data.validReferral ? 'You got 50 Coins + 25 Bonus from your referral code!' : 'You got 50 Coins!',
+              icon: 'success',
+              confirmButtonColor: '#8b5cf6',
+              background: '#1c1c24',
+              color: '#fff'
+            });
+          } catch (e) {
+            Swal.fire({ title: 'Error', text: 'Could not claim gift.', icon: 'error', background: '#1c1c24', color: '#fff' });
+            window.onboardingShown = false;
+          }
+        }
+      };
+      claimGift();
+    }
+  }, [userData]);
 
   // Sync nav disabled state whenever feed ref updates
   const syncNav = () => {
@@ -38,9 +117,18 @@ function App() {
     setTimeout(syncNav, 20);
   };
 
-  const handleProfileClick = (user) => {
+  const handleProfileClick = (user, forceDevDashboard = false) => {
     setSelectedUser(user);
-    setPage('profile');
+    if (forceDevDashboard) {
+      setPage('publicDeveloperDashboard');
+    } else {
+      setPage('profile');
+    }
+  };
+
+  const handlePlayGameInFeed = (gameId) => {
+    setPage('feed');
+    feedRef.current?.playSpecificGame(gameId);
   };
 
   // Register service worker
@@ -55,7 +143,7 @@ function App() {
   return (
     <div className="app-root">
       {/* Game slots — isolated stacking context, no animated UI inside */}
-      <GameFeed ref={feedRef} onProfileClick={handleProfileClick} />
+      <GameFeed ref={feedRef} onProfileClick={handleProfileClick} initialGameId={initialGameId} />
 
       {/* ── Floating UI lives HERE in root stacking context ──
           These are ABOVE game-feed (z-index: 0) but NOT inside its compositor layer.
@@ -85,6 +173,7 @@ function App() {
                 </svg>
                 <div className="bz-glow"></div>
               </button>
+
               <button 
                 className="nav-btn profile-icon-btn" 
                 onClick={() => {
@@ -111,6 +200,15 @@ function App() {
                   </div>
                 )}
               </button>
+
+              {/* GF Coin Display */}
+              <div 
+                style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.1)', padding: '4px 10px 4px 6px', borderRadius: '20px', gap: '6px', cursor: 'pointer', transition: 'background 0.2s' }}
+                onClick={() => setShowCoinModal(true)}
+              >
+                <img src="/gfcoin.webp" alt="GF Coin" style={{ width: '22px', height: '22px', borderRadius: '50%' }} />
+                <span style={{ color: '#fff', fontSize: '14px', fontFamily: 'Outfit, sans-serif', fontWeight: 'bold' }}>{userData?.coins || 0}</span>
+              </div>
             </div>
           </div>
 
@@ -134,20 +232,54 @@ function App() {
         <UserProfile 
           user={selectedUser} 
           isCurrentUser={currentUser && currentUser.uid === selectedUser.id}
+          isDeveloper={isDeveloper}
+          onOpenDevDashboard={() => setPage('developerDashboard')}
+          onBecomeDeveloper={async () => {
+            const userRef = doc(db, 'users', currentUser.uid);
+            await setDoc(userRef, { isDeveloper: true }, { merge: true });
+            setIsDeveloper(true);
+            setPage('developerDashboard');
+          }}
           onClose={() => setPage('feed')} 
+          onPlayGameInFeed={handlePlayGameInFeed}
+        />
+      )}
+
+      {page === 'developerDashboard' && currentUser && (
+        <DeveloperDashboard 
+          user={{ id: currentUser.uid, name: currentUser.displayName || 'Dev' }} 
+          isCurrentUser={true}
+          onClose={() => setPage('feed')}
+          onPlayGameInFeed={handlePlayGameInFeed}
+        />
+      )}
+
+      {page === 'publicDeveloperDashboard' && selectedUser && (
+        <DeveloperDashboard 
+          user={selectedUser} 
+          isCurrentUser={currentUser && currentUser.uid === selectedUser.id}
+          onClose={() => setPage('feed')}
+          onPlayGameInFeed={handlePlayGameInFeed}
         />
       )}
 
       {/* Login Screen overlays everything */}
       {page === 'login' && (
         <Login onLogin={() => {
-          setPage('profile');
-          setSelectedUser({
-            id: auth.currentUser.uid,
-            name: auth.currentUser.displayName || 'Anonymous Player',
-            logo: auth.currentUser.photoURL || null
-          });
-        }} onClose={() => setPage('feed')} />
+          setPage('feed');
+        }} mandatory={true} />
+      )}
+
+      {/* Loading Screen */}
+      {page === 'loading' && (
+        <div style={{ position: 'fixed', inset: 0, background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }}>
+          <img src="/gflogo.png" alt="Loading" style={{ filter: 'invert(1)', width: '64px', animation: 'pulse 1.5s infinite' }} />
+        </div>
+      )}
+
+      {/* GF Coin Info Modal */}
+      {showCoinModal && (
+        <GFCoinModal onClose={() => setShowCoinModal(false)} currentUser={currentUser} />
       )}
     </div>
   );

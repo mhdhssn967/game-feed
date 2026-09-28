@@ -3,6 +3,7 @@ import { getAnalytics, isSupported } from "firebase/analytics";
 import { getFirestore, collection, onSnapshot } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { getStorage } from "firebase/storage";
+import { getFunctions } from "firebase/functions";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -20,6 +21,7 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
+export const functions = getFunctions(app, 'us-central1');
 
 // Analytics (safely initialized)
 export let analytics;
@@ -51,6 +53,8 @@ export function subscribeToFeedGames(onGamesLoaded) {
             addedByUserId: data.addedByUserId || null,
             thumbnail: data.thumbnail || null,
             createdAt: data.createdAt ? data.createdAt : null,
+            likesCount: data.likesCount || 0,
+            commentsCount: data.commentsCount || 0,
           });
         }
       });

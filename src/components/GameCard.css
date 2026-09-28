@@ -93,15 +93,15 @@
 /* ── Overlay UI Styles ── */
 .game-overlay {
   position: absolute;
+  top: 0;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 24px 16px calc(32px + env(safe-area-inset-bottom, 16px));
+  padding: 16px;
   display: flex;
-  justify-content: flex-end; /* aligned right */
-  align-items: flex-end;
-  pointer-events: none; /* Let touches pass through */
-  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+  justify-content: flex-end;
+  align-items: center;
+  pointer-events: none;
   z-index: 10;
   transition: opacity 0.3s ease;
 }
@@ -112,7 +112,6 @@
   flex-direction: column;
   gap: 22px;
   align-items: center;
-  margin-bottom: 24px;
 }
 
 .action-btn {
