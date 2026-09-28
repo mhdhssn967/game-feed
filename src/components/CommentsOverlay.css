@@ -136,7 +136,7 @@
   font-family: 'Inter', sans-serif;
 }
 
-/* Ensure SweetAlert modals appear above the comments overlay */
+/* Ensure SweetAlert modals appear above the comments overlay and gfcoin modal */
 .swal2-container {
-  z-index: 10000 !important;
+  z-index: 999999 !important;
 }

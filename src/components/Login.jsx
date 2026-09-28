@@ -13,6 +13,28 @@ function Login({ onLogin, onClose, mandatory }) {
   const [referralCode, setReferralCode] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
+  const handleReferralFocus = () => {
+    if (!referralCode) setReferralCode('GF-');
+  };
+
+  const handleReferralBlur = () => {
+    if (referralCode === 'GF-') setReferralCode('');
+  };
+
+  const handleReferralChange = (e) => {
+    let val = e.target.value.toUpperCase();
+    if (val === '') {
+      setReferralCode('');
+      return;
+    }
+    if (!val.startsWith('GF-')) {
+       val = 'GF-' + val.replace(/^GF-?/, '');
+    }
+    const suffix = val.slice(3).replace(/[^A-Z0-9]/g, '');
+    if (suffix.length > 6) return; // GF- + 6 chars
+    setReferralCode('GF-' + suffix);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
@@ -66,7 +88,7 @@ function Login({ onLogin, onClose, mandatory }) {
         <div className="login-header">
           <img src="/gflogo.png" alt="GameFaktory" className="login-logo" style={{ filter: 'invert(1)' }} />
           <h2>{isLoginMode ? 'Welcome to GameFaktory' : 'Create Account'}</h2>
-          <p>{isLoginMode ? 'Sign in to manage your profile and games.' : 'Join the GameFaktory community!'}</p>
+          <p>{isLoginMode ? 'Sign in to manage your profile and games.' : 'Join the GameFaktory community and get 50 Coins free!'}</p>
         </div>
         
         <form className="login-form" onSubmit={handleSubmit}>
@@ -95,14 +117,19 @@ function Login({ onLogin, onClose, mandatory }) {
                   required 
                 />
               </div>
-              <div className="login-input-group">
+              <div className="login-input-group" style={{ marginBottom: '6px' }}>
                 <input 
                   type="text" 
                   placeholder="Referral Code (Optional)" 
                   value={referralCode} 
-                  onChange={(e) => setReferralCode(e.target.value)} 
+                  onFocus={handleReferralFocus}
+                  onBlur={handleReferralBlur}
+                  onChange={handleReferralChange} 
                 />
               </div>
+              <p style={{ margin: '0 0 12px 6px', fontSize: '12px', color: '#facc15', textAlign: 'left', fontFamily: 'Inter, sans-serif' }}>
+                Entering a referral code gives you +25 extra coins!
+              </p>
             </>
           )}
           <div className="login-input-group">
@@ -124,7 +151,7 @@ function Login({ onLogin, onClose, mandatory }) {
             />
           </div>
           <button type="submit" className="login-submit-btn">
-            {isLoginMode ? 'Sign In' : 'Sign Up'}
+            {isLoginMode ? 'Sign In' : 'Sign Up & Get 50 Coins'}
           </button>
         </form>
 
