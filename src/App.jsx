@@ -6,6 +6,7 @@ import UserProfile from './components/UserProfile';
 import DeveloperDashboard from './components/DeveloperDashboard';
 import Login from './components/Login';
 import GFCoinModal from './components/GFCoinModal';
+import PWAInstallModal from './components/PWAInstallModal';
 import { auth, db, functions, DEFAULT_AVATAR } from './firebase';
 import { httpsCallable } from 'firebase/functions';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
@@ -272,6 +273,8 @@ function App() {
       {showCoinModal && (
         <GFCoinModal onClose={() => setShowCoinModal(false)} currentUser={currentUser} />
       )}
+
+      <PWAInstallModal />
     </div>
   );
 }
