@@ -6,7 +6,7 @@ import UserProfile from './components/UserProfile';
 import DeveloperDashboard from './components/DeveloperDashboard';
 import Login from './components/Login';
 import GFCoinModal from './components/GFCoinModal';
-import { auth, db, functions } from './firebase';
+import { auth, db, functions, DEFAULT_AVATAR } from './firebase';
 import { httpsCallable } from 'firebase/functions';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -181,7 +181,7 @@ function App() {
                     setSelectedUser({
                       id: currentUser.uid,
                       name: currentUser.displayName || 'Anonymous Player',
-                      logo: currentUser.photoURL || null
+                      logo: currentUser.photoURL || DEFAULT_AVATAR
                     });
                     setPage('profile');
                   } else {
@@ -189,16 +189,7 @@ function App() {
                   }
                 }}
               >
-                {currentUser?.photoURL ? (
-                  <img src={currentUser.photoURL} alt="Profile" className="nav-profile-pic" />
-                ) : (
-                  <div className="nav-profile-placeholder">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                  </div>
-                )}
+                <img src={currentUser?.photoURL || DEFAULT_AVATAR} alt="Profile" className="nav-profile-pic" />
               </button>
 
               {/* GF Coin Display */}

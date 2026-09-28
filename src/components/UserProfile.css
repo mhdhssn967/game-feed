@@ -70,6 +70,7 @@
   flex-direction: column;
   align-items: center;
   margin-top: -50px;
+  position: relative;
   z-index: 5;
 }
 
@@ -568,4 +569,27 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* SweetAlert Developer Modal overrides */
+.swal-dev-modal {
+  border-radius: 20px !important;
+  overflow: hidden;
+}
+
+.swal-dev-modal .swal2-html-container {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.swal-dev-actions {
+  margin-top: 0 !important;
+  padding: 0 24px 28px 24px !important;
+  gap: 12px;
+}
+
+.swal-dev-btn-confirm, .swal-dev-btn-cancel {
+  border-radius: 12px !important;
+  padding: 12px 24px !important;
+  flex: 1;
 }

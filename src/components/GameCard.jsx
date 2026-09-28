@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Bookmark, Share2 } from 'lucide-react';
-import { db, auth, functions } from '../firebase';
+import { db, auth, functions, DEFAULT_AVATAR } from '../firebase';
 import { httpsCallable } from 'firebase/functions';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import Swal from 'sweetalert2';
@@ -200,14 +200,7 @@ function GameCard({ game, url: fallbackUrl, shouldLoad, onProfileClick }) {
       <div className="game-top-bar visible">
         <div className="dev-info-compact" onClick={handleDevClick} style={{ cursor: 'pointer' }}>
           <div className="dev-profile-pic-small" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2a224a', color: '#a78bfa' }}>
-            {developerLogo ? (
-              <img src={developerLogo} alt={developerName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-            )}
+            <img src={developerLogo || DEFAULT_AVATAR} alt={developerName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <span className="dev-name-small">{developerName}</span>
         </div>

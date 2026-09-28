@@ -23,6 +23,8 @@ export const auth = getAuth(app);
 export const storage = getStorage(app);
 export const functions = getFunctions(app, 'us-central1');
 
+export const DEFAULT_AVATAR = "https://firebasestorage.googleapis.com/v0/b/gamefaktory-1b0b8.firebasestorage.app/o/profile_pictures%2F1f065674-1cf8-43f6-b2e1-6432e24702d0%20(12).webp?alt=media";
+
 // Analytics (safely initialized)
 export let analytics;
 if (typeof window !== "undefined") {

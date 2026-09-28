@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { subscribeToFeedGames, auth, storage, db } from '../firebase';
+import { subscribeToFeedGames, auth, storage, db, DEFAULT_AVATAR } from '../firebase';
 import { updateProfile } from 'firebase/auth';
 import { doc, updateDoc, onSnapshot, setDoc, getDoc, arrayUnion, arrayRemove, addDoc, collection, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import Swal from 'sweetalert2';
@@ -163,15 +163,33 @@ function UserProfile({ user, isCurrentUser, isDeveloper, onOpenDevDashboard, onB
   const handleBecomeDeveloperClick = async () => {
     if (isDeveloper) return;
     const result = await Swal.fire({
-      title: 'Become a developer?',
-      text: 'You can start uploading and sharing your games!',
-      icon: 'question',
+      title: null,
+      html: `
+        <div style="width: 100%; overflow: hidden; border-top-left-radius: 20px; border-top-right-radius: 20px;">
+          <img src="/publishgamebanner2.png" style="width: 100%; display: block;" alt="Publish Games" />
+        </div>
+        <div style="padding: 28px 24px 12px 24px; text-align: center;">
+          <h2 style="font-family: 'Outfit', sans-serif; font-size: 28px; margin: 0 0 12px; color: #fff; font-weight: 700; letter-spacing: -0.5px;">Join the Developer Program</h2>
+          <p style="font-family: 'Inter', sans-serif; font-size: 16px; margin: 0; color: #d4d4d8; line-height: 1.5;">
+            Unlock exclusive developer tools, publish your own HTML5 games directly to the feed, and start building your audience today!
+          </p>
+        </div>
+      `,
       showCancelButton: true,
       confirmButtonColor: '#8b5cf6',
-      cancelButtonColor: '#f44336',
-      confirmButtonText: 'Yes, let\'s go!',
-      background: '#1c1c24',
-      color: '#fff'
+      cancelButtonColor: '#27272a',
+      confirmButtonText: '<span style="font-family: \'Inter\', sans-serif; font-weight: 600; font-size: 16px;">Upgrade Now</span>',
+      cancelButtonText: '<span style="font-family: \'Inter\', sans-serif; font-weight: 500; font-size: 16px;">Maybe Later</span>',
+      background: '#18181b',
+      color: '#fff',
+      width: '92%',
+      padding: '0',
+      customClass: {
+        popup: 'swal-dev-modal',
+        confirmButton: 'swal-dev-btn-confirm',
+        cancelButton: 'swal-dev-btn-cancel',
+        actions: 'swal-dev-actions'
+      }
     });
     if (result.isConfirmed) {
       onBecomeDeveloper();
@@ -192,16 +210,7 @@ function UserProfile({ user, isCurrentUser, isDeveloper, onOpenDevDashboard, onB
       <div className="up-content">
         <div className="up-profile-header">
           <div className="up-avatar-wrapper" onClick={isCurrentUser ? loadAvatars : undefined} style={{ cursor: isCurrentUser ? 'pointer' : 'default' }}>
-            {localUser.logo ? (
-              <img src={localUser.logo} alt={localUser.name} className="up-avatar" />
-            ) : (
-              <div className="up-avatar-placeholder">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-              </div>
-            )}
+            <img src={localUser.logo || DEFAULT_AVATAR} alt={localUser.name} className="up-avatar" />
             {isCurrentUser && (
               <div className="up-avatar-edit-overlay">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -279,8 +288,8 @@ function UserProfile({ user, isCurrentUser, isDeveloper, onOpenDevDashboard, onB
         )}
 
         {isCurrentUser && !isDeveloper && (
-          <div className="developer-banner-wrapper" onClick={handleBecomeDeveloperClick} style={{ cursor: 'pointer', margin: '20px 16px 24px 16px', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
-            <img src="/publishgamebanner.png" alt="Publish Games" style={{ width: '100%', display: 'block' }} />
+          <div className="developer-banner-wrapper" onClick={handleBecomeDeveloperClick} style={{ cursor: 'pointer', margin: '20px -20px 24px -20px', alignSelf: 'stretch', overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
+            <img src="/publishgamebanner2.png" alt="Publish Games" style={{ width: '100%', display: 'block' }} />
           </div>
         )}
 

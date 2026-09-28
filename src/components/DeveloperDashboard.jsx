@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { subscribeToFeedGames, auth, storage, db } from '../firebase';
+import { subscribeToFeedGames, auth, storage, db, DEFAULT_AVATAR } from '../firebase';
 import { ref, getDownloadURL, uploadBytes } from 'firebase/storage';
 import { doc, updateDoc, collection, serverTimestamp, deleteDoc, addDoc } from 'firebase/firestore';
 import Swal from 'sweetalert2';
@@ -225,16 +225,21 @@ function DeveloperDashboard({ user, isCurrentUser, onClose, onPlayGameInFeed }) 
 
       <div className="up-content">
         <div className="up-profile-header">
+          <div className="up-avatar-wrapper" style={{ cursor: 'default' }}>
+            <img src={localUser.logo || DEFAULT_AVATAR} alt={localUser.name} className="up-avatar" />
+          </div>
           <h2 className="up-username">{localUser.name}</h2>
-          <span style={{color: '#a78bfa'}}>Developer Mode</span>
+          <span style={{color: '#a78bfa'}}>Developer</span>
         </div>
 
         <div className="up-library">
           <div className="up-library-header">
             <h3 className="up-library-title">My Games</h3>
-            <button className="up-add-game-btn" onClick={() => setIsAddingGame(true)}>
-              + Add New Game
-            </button>
+            {isCurrentUser && (
+              <button className="up-add-game-btn" onClick={() => setIsAddingGame(true)}>
+                + Add New Game
+              </button>
+            )}
           </div>
           
           <div className="up-cards-grid">
