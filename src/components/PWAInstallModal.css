@@ -1,0 +1,251 @@
+.pwa-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  font-family: 'Inter', sans-serif;
+}
+
+.pwa-modal {
+  background: linear-gradient(180deg, #1e1b4b 0%, #0c0a20 100%);
+  border-radius: 32px;
+  width: 100%;
+  max-width: 420px;
+  padding: 32px 28px;
+  position: relative;
+  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.3), 0 24px 48px rgba(0, 0, 0, 0.6);
+  color: #fff;
+  overflow: hidden;
+}
+
+/* Decorative glowing orbs in background */
+.pwa-modal::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 40%),
+              radial-gradient(circle at 50% 100%, rgba(168, 85, 247, 0.15) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pwa-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 20px;
+}
+
+.pwa-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Luckiest Guy', cursive;
+  font-size: 15px;
+  color: #fff;
+}
+
+.pwa-logo-img {
+  height: 20px;
+  filter: invert(1);
+}
+
+.pwa-close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.pwa-close-btn:active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.pwa-title {
+  position: relative;
+  z-index: 1;
+  font-family: 'Luckiest Guy', cursive;
+  font-size: 34px;
+  line-height: 1.15;
+  margin: 0 0 28px;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.pwa-title-highlight {
+  color: #60a5fa;
+  text-shadow: 0 0 20px rgba(96, 165, 250, 0.4);
+}
+
+.pwa-mascot-banner {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%);
+  border-radius: 24px;
+  padding: 24px 24px 24px 130px;
+  margin-bottom: 32px;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.pwa-mascot-img {
+  position: absolute;
+  left: -15px;
+  bottom: 0;
+  width: 140px;
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(4px 4px 10px rgba(0,0,0,0.3));
+}
+
+.pwa-mascot-text h3 {
+  font-family: 'Luckiest Guy', cursive;
+  font-size: 22px;
+  margin: 0 0 8px;
+  line-height: 1.1;
+  color: #fff;
+  letter-spacing: 1px;
+}
+
+.pwa-mascot-text p {
+  font-size: 12.5px;
+  margin: 0;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.4;
+}
+
+.pwa-steps-container {
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 28px 24px;
+  margin-bottom: 36px;
+}
+
+.pwa-step {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.pwa-step-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  flex-shrink: 0;
+}
+
+.pwa-step-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.pwa-step-icon-blue {
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.pwa-step-icon-purple {
+  color: #c084fc;
+  border: 1px solid rgba(192, 132, 252, 0.2);
+}
+
+.pwa-step-text {
+  font-size: 13.5px;
+  font-weight: 400;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.pwa-highlight-blue {
+  color: #60a5fa;
+  font-weight: 500;
+}
+
+.pwa-highlight-purple {
+  color: #c084fc;
+  font-weight: 500;
+}
+
+.pwa-plus-icon {
+  display: inline-block;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  width: 16px;
+  height: 16px;
+  line-height: 14px;
+  text-align: center;
+  border-radius: 4px;
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.pwa-step-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 20px 0 20px 48px;
+}
+
+.pwa-action-btn {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 24px;
+  border-radius: 100px;
+  background: linear-gradient(90deg, #a855f7 0%, #3b82f6 100%);
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(168, 85, 247, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.pwa-action-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+}

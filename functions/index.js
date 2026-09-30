@@ -252,3 +252,84 @@ exports.processReferralCode = onCall(async (request) => {
     throw new HttpsError("internal", error.message);
   }
 });
+
+exports.awardPlaytimeCoin = onCall(async (request) => {
+  const { auth } = request;
+  if (!auth) throw new HttpsError("unauthenticated", "User must be logged in.");
+
+  const uid = auth.uid;
+  const userRef = db.collection("users").doc(uid);
+
+  try {
+    return await db.runTransaction(async (t) => {
+      const userDoc = await t.get(userRef);
+      const currentCoins = (userDoc.exists && userDoc.data().coins) ? Number(userDoc.data().coins) : 0;
+      const currentPlaytimeCoins = (userDoc.exists && userDoc.data().playtimeCoins) ? Number(userDoc.data().playtimeCoins) : 0;
+      t.set(userRef, { 
+        coins: currentCoins + 1,
+        playtimeCoins: currentPlaytimeCoins + 1
+      }, { merge: true });
+      return { success: true, coinsAdded: 1 };
+    });
+  } catch (error) {
+    console.error("Error awarding playtime coin:", error);
+    throw new HttpsError("internal", error.message);
+  }
+});
+
+exports.purchaseLife = onCall(async (request) => {
+  const { auth } = request;
+  if (!auth) throw new HttpsError("unauthenticated", "User must be logged in.");
+
+  const uid = auth.uid;
+  const userRef = db.collection("users").doc(uid);
+
+  try {
+    return await db.runTransaction(async (t) => {
+      const userDoc = await t.get(userRef);
+      const currentCoins = (userDoc.exists && userDoc.data().coins) ? Number(userDoc.data().coins) : 0;
+      
+      if (currentCoins < 10) {
+        throw new HttpsError("failed-precondition", "Not enough coins. Need 10 coins.");
+      }
+
+      const currentLives = (userDoc.exists && userDoc.data().lives) ? Number(userDoc.data().lives) : 0;
+      
+      t.set(userRef, { 
+        coins: currentCoins - 10,
+        lives: currentLives + 1
+      }, { merge: true });
+      return { success: true, livesAdded: 1 };
+    });
+  } catch (error) {
+    console.error("Error purchasing life:", error);
+    throw new HttpsError(error.code || "internal", error.message);
+  }
+});
+
+exports.consumeLife = onCall(async (request) => {
+  const { auth } = request;
+  if (!auth) throw new HttpsError("unauthenticated", "User must be logged in.");
+
+  const uid = auth.uid;
+  const userRef = db.collection("users").doc(uid);
+
+  try {
+    return await db.runTransaction(async (t) => {
+      const userDoc = await t.get(userRef);
+      const currentLives = (userDoc.exists && userDoc.data().lives) ? Number(userDoc.data().lives) : 0;
+      
+      if (currentLives <= 0) {
+        throw new HttpsError("failed-precondition", "No lives available.");
+      }
+
+      t.set(userRef, { 
+        lives: currentLives - 1
+      }, { merge: true });
+      return { success: true, livesRemaining: currentLives - 1 };
+    });
+  } catch (error) {
+    console.error("Error consuming life:", error);
+    throw new HttpsError(error.code || "internal", error.message);
+  }
+});

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, MessageCircle, Bookmark, Share2 } from 'lucide-react';
+import { Heart, MessageCircle, Bookmark, Share2, Pause, Lock } from 'lucide-react';
 import { db, auth, functions, DEFAULT_AVATAR } from '../firebase';
 import { httpsCallable } from 'firebase/functions';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
@@ -7,7 +7,7 @@ import Swal from 'sweetalert2';
 import CommentsOverlay from './CommentsOverlay';
 import './GameCard.css';
 
-function GameCard({ game, url: fallbackUrl, shouldLoad, onProfileClick }) {
+function GameCard({ game, url: fallbackUrl, shouldLoad, onProfileClick, userData }) {
   const url = game?.link || game?.url || fallbackUrl;
   const developerName = game?.addedByName || game?.developer || 'Unknown User';
   const comments = game?.commentsCount || 0;
@@ -18,9 +18,48 @@ function GameCard({ game, url: fallbackUrl, shouldLoad, onProfileClick }) {
   const [isLiked, setIsLiked] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isUnlocking, setIsUnlocking] = useState(false);
+
+  const handleUnlock = async () => {
+    if (isUnlocking) return;
+    setIsUnlocking(true);
+    try {
+      const userLives = userData?.lives || 0;
+      if (userLives > 0) {
+        const consumeLife = httpsCallable(functions, 'consumeLife');
+        await consumeLife();
+        setIsUnlocked(true);
+      } else {
+        // Need to purchase a life first
+        const userCoins = userData?.coins || 0;
+        if (userCoins >= 10) {
+          const purchaseLife = httpsCallable(functions, 'purchaseLife');
+          await purchaseLife();
+          // After purchasing, consume it
+          const consumeLife = httpsCallable(functions, 'consumeLife');
+          await consumeLife();
+          setIsUnlocked(true);
+        } else {
+          Swal.fire({
+            title: 'Not Enough Coins!',
+            text: 'You need 10 coins to buy a life to play this exclusive game. Keep playing other games to earn more!',
+            icon: 'error',
+            background: '#1c1c24',
+            color: '#fff'
+          });
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      Swal.fire('Error', e.message || 'Could not unlock game', 'error');
+    }
+    setIsUnlocking(false);
+  };
 
   useEffect(() => {
     setLocalLikesCount(game?.likesCount || 0);
@@ -185,49 +224,107 @@ function GameCard({ game, url: fallbackUrl, shouldLoad, onProfileClick }) {
   return (
     <div className="game-card">
       {shouldLoad ? (
-        <iframe
-          src={url}
-          className="game-iframe"
-          title={url}
-          allow="fullscreen; autoplay; gyroscope; accelerometer; encrypted-media"
-          loading="lazy"
-        />
+        (game?.isExclusive && !isUnlocked) ? (
+          <div className="exclusive-lock-screen" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0d0d0d 0%, #1c1c24 100%)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
+            <Lock size={64} color="#a78bfa" style={{ marginBottom: '20px' }} />
+            <h2 style={{ color: '#fff', fontSize: '28px', fontFamily: 'Outfit, sans-serif', marginBottom: '10px' }}>Exclusive Game</h2>
+            <p style={{ color: '#aaa', fontSize: '16px', marginBottom: '30px' }}>Unlock gameplays using your coins.</p>
+            
+            <button 
+              onClick={handleUnlock}
+              disabled={isUnlocking}
+              style={{ background: '#8b5cf6', color: '#fff', border: 'none', padding: '16px 32px', borderRadius: '30px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+            >
+              {isUnlocking ? 'Processing...' : (userData?.lives > 0 ? 'Unlock Game (-1 Life)' : 'Buy 1 Life (10 Coins)')}
+            </button>
+          </div>
+        ) : (
+          <iframe
+            src={url}
+            className={game?.isExclusive ? 'game-iframe exclusive-iframe' : 'game-iframe'}
+            title={url}
+            allow="fullscreen; autoplay; gyroscope; accelerometer; encrypted-media"
+            loading="lazy"
+            style={game?.isExclusive && isPaused ? { display: 'none' } : {}}
+          />
+        )
       ) : (
         <div className="game-placeholder" />
       )}
 
-      {/* ── Top Bar (User Info) ── */}
-      <div className="game-top-bar visible">
-        <div className="dev-info-compact" onClick={handleDevClick} style={{ cursor: 'pointer' }}>
-          <div className="dev-profile-pic-small" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2a224a', color: '#a78bfa' }}>
-            <img src={developerLogo || DEFAULT_AVATAR} alt={developerName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          </div>
-          <span className="dev-name-small">{developerName}</span>
+      {/* ── Exclusive Mode Overlays ── */}
+      {game?.isExclusive && (
+        <>
+          <style>{`
+            .nav-arrows, .top-navbar { opacity: 0 !important; pointer-events: none !important; }
+          `}</style>
+          <button 
+            className="exclusive-pause-btn"
+          onClick={() => setIsPaused(true)}
+          style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 100000, background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: '50%', padding: '10px', color: 'white', cursor: 'pointer' }}
+        >
+          <Pause size={24} />
+        </button>
+        </>
+      )}
+
+      {game?.isExclusive && isPaused && (
+        <div className="exclusive-pause-menu" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 100001, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
+          <h2 style={{ color: '#fff', fontSize: '32px', marginBottom: '20px', fontFamily: 'Outfit, sans-serif' }}>PAUSED</h2>
+          <button 
+            onClick={() => setIsPaused(false)}
+            style={{ background: '#8b5cf6', color: '#fff', border: 'none', padding: '15px 40px', borderRadius: '30px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            RESUME
+          </button>
+          <button 
+            onClick={() => {
+              setIsPaused(false);
+              document.getElementById('nav-down-btn')?.click();
+            }}
+            style={{ background: 'transparent', color: '#fff', border: '2px solid #fff', padding: '15px 40px', borderRadius: '30px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            QUIT
+          </button>
         </div>
-        <button className="follow-btn-small">Follow</button>
-      </div>
+      )}
+
+      {/* ── Top Bar (User Info) ── */}
+      {!game?.isExclusive && (
+        <div className="game-top-bar visible">
+          <div className="dev-info-compact" onClick={handleDevClick} style={{ cursor: 'pointer' }}>
+            <div className="dev-profile-pic-small" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2a224a', color: '#a78bfa' }}>
+              <img src={developerLogo || DEFAULT_AVATAR} alt={developerName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <span className="dev-name-small">{developerName}</span>
+          </div>
+          <button className="follow-btn-small">Follow</button>
+        </div>
+      )}
 
       {/* ── Overlay UI (Engagement Actions) ── */}
-      <div className="game-overlay visible">
-        <div className="action-buttons-col">
-          <button className="action-btn" onClick={handleLike}>
-            <Heart className="action-icon" size={28} color={isLiked ? "#ff4040" : "#fff"} fill={isLiked ? "#ff4040" : "none"} />
-            <span className="action-text">{localLikesCount}</span>
-          </button>
-          <button className="action-btn" onClick={() => setShowComments(true)}>
-            <MessageCircle className="action-icon" size={28} color="#fff" />
-            <span className="action-text">{localCommentsCount}</span>
-          </button>
-          <button className="action-btn" onClick={handleSave}>
-            <Bookmark className="action-icon" size={28} color={isSaved ? "#facc15" : "#fff"} fill={isSaved ? "#facc15" : "none"} />
-            <span className="action-text">Save</span>
-          </button>
-          <button className="action-btn" onClick={handleShare}>
-            <Share2 className="action-icon" size={28} color="#fff" />
-            <span className="action-text">Share</span>
-          </button>
+      {!game?.isExclusive && (
+        <div className="game-overlay visible">
+          <div className="action-buttons-col">
+            <button className="action-btn" onClick={handleLike}>
+              <Heart className="action-icon" size={28} color={isLiked ? "#ff4040" : "#fff"} fill={isLiked ? "#ff4040" : "none"} />
+              <span className="action-text">{localLikesCount}</span>
+            </button>
+            <button className="action-btn" onClick={() => setShowComments(true)}>
+              <MessageCircle className="action-icon" size={28} color="#fff" />
+              <span className="action-text">{localCommentsCount}</span>
+            </button>
+            <button className="action-btn" onClick={handleSave}>
+              <Bookmark className="action-icon" size={28} color={isSaved ? "#facc15" : "#fff"} fill={isSaved ? "#facc15" : "none"} />
+              <span className="action-text">Save</span>
+            </button>
+            <button className="action-btn" onClick={handleShare}>
+              <Share2 className="action-icon" size={28} color="#fff" />
+              <span className="action-text">Share</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       <CommentsOverlay 
         gameId={game?.id} 

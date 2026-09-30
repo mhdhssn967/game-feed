@@ -22,6 +22,8 @@ function App() {
   const [userData, setUserData] = useState(null);
   const [isDeveloper, setIsDeveloper] = useState(false);
   const [showCoinModal, setShowCoinModal] = useState(false);
+  const [isPlayingGame, setIsPlayingGame] = useState(true);
+  const [playtimeSeconds, setPlaytimeSeconds] = useState(0);
   const feedRef = useRef(null);
 
   const initialGameId = new URLSearchParams(window.location.search).get('game');
@@ -42,7 +44,7 @@ function App() {
               setIsDeveloper(false);
             }
           } else {
-            setUserData(null);
+            setUserData({});
             setIsDeveloper(false);
           }
         });
@@ -84,13 +86,63 @@ function App() {
             Swal.fire({ title: 'Claiming...', background: '#1c1c24', color: '#fff', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             const processReferral = httpsCallable(functions, 'processReferralCode');
             const response = await processReferral({});
-            Swal.fire({
-              title: 'Gift Claimed!',
-              text: response.data.validReferral ? 'You got 50 Coins + 25 Bonus from your referral code!' : 'You got 50 Coins!',
-              icon: 'success',
+            await Swal.fire({
+              title: 'Gift Claimed! 🎉',
+              html: `
+                <div style="padding: 10px 0;">
+                  <h2 style="font-size: 32px; font-weight: bold; color: #a78bfa; margin: 0 0 10px;">${response.data.validReferral ? '75' : '50'} GF Coins</h2>
+                  <p style="font-size: 16px; color: #d4d4d8;">${response.data.validReferral ? 'You got 50 Coins + 25 Bonus from your referral code!' : 'You got 50 Coins to kickstart your journey!'}</p>
+                </div>
+              `,
+              imageUrl: '/gfcoin.webp',
+              imageWidth: 80,
+              imageHeight: 80,
+              confirmButtonText: 'Next',
               confirmButtonColor: '#8b5cf6',
               background: '#1c1c24',
-              color: '#fff'
+              color: '#fff',
+              allowOutsideClick: false,
+              allowEscapeKey: false
+            });
+
+            await Swal.fire({
+              title: 'Play & Earn',
+              html: `
+                <div style="padding: 10px 0;">
+                  <h3 style="font-size: 24px; font-weight: bold; color: #fff; margin: 0 0 10px;">Time is Money</h3>
+                  <p style="font-size: 16px; color: #d4d4d8; line-height: 1.6;">
+                    For every <strong>5 minutes</strong> you spend playing games or exploring the app, you will automatically earn <strong>1 GF Coin</strong>. 
+                  </p>
+                </div>
+              `,
+              icon: 'info',
+              iconColor: '#8b5cf6',
+              confirmButtonText: 'Next',
+              confirmButtonColor: '#8b5cf6',
+              background: '#1c1c24',
+              color: '#fff',
+              allowOutsideClick: false,
+              allowEscapeKey: false
+            });
+
+            await Swal.fire({
+              title: 'Real Rewards',
+              html: `
+                <div style="padding: 10px 0;">
+                  <h3 style="font-size: 24px; font-weight: bold; color: #fff; margin: 0 0 10px;">Brand Games</h3>
+                  <p style="font-size: 16px; color: #d4d4d8; line-height: 1.6;">
+                    Use your hard-earned GF Coins to play exclusive brand games. Win these games to earn <strong>real-world rewards</strong> and prizes!
+                  </p>
+                </div>
+              `,
+              icon: 'success',
+              iconColor: '#10b981',
+              confirmButtonText: "Let's Play!",
+              confirmButtonColor: '#8b5cf6',
+              background: '#1c1c24',
+              color: '#fff',
+              allowOutsideClick: false,
+              allowEscapeKey: false
             });
           } catch (e) {
             Swal.fire({ title: 'Error', text: 'Could not claim gift.', icon: 'error', background: '#1c1c24', color: '#fff' });
@@ -101,6 +153,41 @@ function App() {
       claimGift();
     }
   }, [userData]);
+
+  // Handle page changes for isPlayingGame
+  useEffect(() => {
+    if (page === 'feed') {
+      setIsPlayingGame(true);
+    } else if (page !== 'brandZone') {
+      // For profile, dev dashboard, login, they are not playing
+      setIsPlayingGame(false);
+    }
+  }, [page]);
+
+  const playtimeSecondsRef = useRef(parseInt(localStorage.getItem('gf_playtime_seconds') || '0', 10));
+
+  // Award 1 coin for every 5 minutes spent actively playing
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const interval = setInterval(() => {
+      // Only advance the timer if the user is actively viewing the tab AND playing a game
+      if (document.visibilityState === 'visible' && isPlayingGame) {
+        playtimeSecondsRef.current += 1;
+        
+        if (playtimeSecondsRef.current >= 300) {
+          playtimeSecondsRef.current = 0;
+          const awardPlaytimeCoin = httpsCallable(functions, 'awardPlaytimeCoin');
+          awardPlaytimeCoin().catch((err) => console.error("Failed to award playtime coin:", err));
+        }
+        
+        localStorage.setItem('gf_playtime_seconds', playtimeSecondsRef.current.toString());
+        setPlaytimeSeconds(playtimeSecondsRef.current);
+      }
+    }, 1000); // Tick every 1 second
+
+    return () => clearInterval(interval);
+  }, [currentUser, isPlayingGame]);
 
   // Sync nav disabled state whenever feed ref updates
   const syncNav = () => {
@@ -144,7 +231,7 @@ function App() {
   return (
     <div className="app-root">
       {/* Game slots — isolated stacking context, no animated UI inside */}
-      <GameFeed ref={feedRef} onProfileClick={handleProfileClick} initialGameId={initialGameId} />
+      <GameFeed ref={feedRef} onProfileClick={handleProfileClick} initialGameId={initialGameId} userData={userData} />
 
       {/* ── Floating UI lives HERE in root stacking context ──
           These are ABOVE game-feed (z-index: 0) but NOT inside its compositor layer.
@@ -160,7 +247,7 @@ function App() {
               </div>
             </div>
 
-            <div className="navbar-center">
+            <div className="navbar-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             </div>
             
             <div className="navbar-right" style={{ gap: '12px' }}>
@@ -216,7 +303,11 @@ function App() {
 
       {/* Brand Zone overlays everything */}
       {page === 'brandZone' && (
-        <BrandZone onClose={() => setPage('feed')} />
+        <BrandZone 
+          onClose={() => setPage('feed')} 
+          onPlayStateChange={(isPlay) => setIsPlayingGame(isPlay)}
+          userData={userData}
+        />
       )}
 
       {/* User Profile overlays everything */}
@@ -269,9 +360,13 @@ function App() {
         </div>
       )}
 
-      {/* GF Coin Info Modal */}
       {showCoinModal && (
-        <GFCoinModal onClose={() => setShowCoinModal(false)} currentUser={currentUser} />
+        <GFCoinModal 
+          onClose={() => setShowCoinModal(false)} 
+          currentUser={currentUser} 
+          userData={userData} 
+          playtimeSeconds={playtimeSeconds}
+        />
       )}
 
       <PWAInstallModal />

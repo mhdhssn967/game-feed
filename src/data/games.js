@@ -1,5 +1,6 @@
 // Common games — shown in the main scrollable feed
 export const commonGames = [
+  { id: 'altos-slide',   url: 'https://altos-slide.vercel.app', isExclusive: true },
   { id: 'wave-rider',    url: 'https://wave-rider-roan.vercel.app' },
   { id: 'piano-tiles',   url: 'https://piano-tiles-8s8w.vercel.app' },
   { id: 'perfect-tower', url: 'https://perfect-tower.vercel.app' },

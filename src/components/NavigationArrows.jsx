@@ -19,6 +19,7 @@ const NavigationArrows = forwardRef(function NavigationArrows(
         </svg>
       </button>
       <button
+        id="nav-down-btn"
         className="nav-arrow"
         onClick={onDown}
         disabled={disableDown}
