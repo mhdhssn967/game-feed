@@ -278,6 +278,7 @@ exports.awardPlaytimeCoin = onCall(async (request) => {
 });
 
 exports.purchaseLife = onCall(async (request) => {
+  // force redeploy 1
   const { auth } = request;
   if (!auth) throw new HttpsError("unauthenticated", "User must be logged in.");
 
@@ -303,11 +304,12 @@ exports.purchaseLife = onCall(async (request) => {
     });
   } catch (error) {
     console.error("Error purchasing life:", error);
-    throw new HttpsError(error.code || "internal", error.message);
+    throw new HttpsError("internal", error.message);
   }
 });
 
 exports.consumeLife = onCall(async (request) => {
+  // force redeploy 1
   const { auth } = request;
   if (!auth) throw new HttpsError("unauthenticated", "User must be logged in.");
 
@@ -330,6 +332,6 @@ exports.consumeLife = onCall(async (request) => {
     });
   } catch (error) {
     console.error("Error consuming life:", error);
-    throw new HttpsError(error.code || "internal", error.message);
+    throw new HttpsError("internal", error.message);
   }
 });
